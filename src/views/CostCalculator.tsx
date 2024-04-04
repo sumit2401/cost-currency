@@ -1,26 +1,31 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
-import logo from "../assets/logo.png";
 import { useFormik } from "formik";
-// import { Box, Grid, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import { useState } from "react";
+import logo from "../assets/logo.png";
+
 import {
   Box,
   Button,
-  FormControl,
-  Grid,
   MenuItem,
+  Paper,
   Select,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
 } from "@mui/material";
-import { CustomTextField } from "../components/CustomTextField";
 import { CountryAutoSearch } from "../components/CountryAutoSearch";
+import { CustomTextField } from "../components/CustomTextField";
 
 interface FormData {
   Client_Invoice_Currency: string;
-  Gross_annual_salary_in_Client_Invoice_Currency: string;
+  gross_annual_salary_in_client_invoice_currency: string;
   Country_of_Employment: string;
-  Gross_annual_salary_in_Local_currency: string;
+
   Monthly_Management_Fee_in_Client_Invoice_Currency: string;
   FX_Rate: string;
 }
@@ -30,22 +35,20 @@ function CostCalculator() {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [selectedClient, setselectedClient] = useState<string>("");
   const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [countries, setCountries] = useState<string[]>([]);
+  // const [countries, setCountries] = useState<string[]>([]);
 
   const {
     values,
     handleChange,
     handleSubmit,
-    errors,
-    setFieldValue,
+
     setValues,
   } = useFormik<FormData>({
     initialValues: {
       Client_Invoice_Currency: "",
-      Gross_annual_salary_in_Client_Invoice_Currency: "",
+      gross_annual_salary_in_client_invoice_currency: "20000",
       Country_of_Employment: "",
-      Gross_annual_salary_in_Local_currency: "",
-      Monthly_Management_Fee_in_Client_Invoice_Currency: "",
+      Monthly_Management_Fee_in_Client_Invoice_Currency: "200",
       FX_Rate: "",
     },
     validate: (values) => {
@@ -54,12 +57,12 @@ function CostCalculator() {
         !values.Client_Invoice_Currency ||
         !values.Country_of_Employment ||
         !values.FX_Rate ||
-        !values.Gross_annual_salary_in_Client_Invoice_Currency
+        !values.gross_annual_salary_in_client_invoice_currency
       ) {
         errors.Client_Invoice_Currency = "Client Invoice Currency is required";
         errors.Country_of_Employment = "Country is required";
         errors.FX_Rate = "FX rate is required";
-        errors.Gross_annual_salary_in_Client_Invoice_Currency =
+        errors.gross_annual_salary_in_client_invoice_currency =
           "Client Invoice salary is required";
       }
       return errors;
@@ -69,7 +72,7 @@ function CostCalculator() {
         const payload = {
           client_invoice_currency: values.Client_Invoice_Currency,
           gross_annual_salary_in_client_invoice_currency:
-            values.Gross_annual_salary_in_Client_Invoice_Currency,
+            values.gross_annual_salary_in_client_invoice_currency,
           country_of_employment: values.Country_of_Employment,
           fx_rate: parseFloat(values.FX_Rate),
         };
@@ -79,7 +82,7 @@ function CostCalculator() {
           payload,
           {
             headers: {
-              key: " sR3pK@t8qF!zW7dV#oHg2eX$uYtM5fR6nA!jB9cDmT#pL@wO4",
+              key: "sR3pK@t8qF!zW7dV#oHg2eX$uYtM5fR6nA!jB9cDmT#pL@wO4",
             },
           }
         );
@@ -94,34 +97,34 @@ function CostCalculator() {
     },
   });
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await axios.get(
-          "https://api.1eor.com/api/v1/country/get-country?pageNo=1&itemPerPage=200"
-        );
-        const countries = response.data.result.map(
-          (country: any) => country.country_name
-        );
-        setFieldValue("Country_of_Employment", countries[0]); // Set the default selected country
-        setCountries(countries);
-      } catch (error) {
-        console.error("Error fetching countries:", error);
-      }
-    };
+  console.log(values, "values");
 
-    fetchCountries();
-  }, [setFieldValue]);
-
-  const handleCountrySelect = (selectedCountry) => {
-    console.log("Selected Country:", selectedCountry);
-
-    setValues({
-      ...values,
-      Country_of_Employment: selectedCountry.country_name,
+  const dataArray = Object.entries(fetchedData)
+    .slice(0, -2)
+    .map(([category, values]) => {
+      return {
+        category: category,
+        //@ts-expect-error description
+        currency_one: Object.values(values)[0],
+        //@ts-expect-error description
+        currency_two: Object.values(values)[1],
+      };
     });
-    // Do something with the selected country
-  };
+
+  //for total values
+  const lastdataArray = Object.entries(fetchedData)
+    .slice(-2)
+    .map(([category, values]) => {
+      return {
+        category: category,
+        //@ts-expect-error description
+        currency_one: Object.values(values)[0],
+        //@ts-expect-error description
+        currency_two: Object.values(values)[1],
+      };
+    });
+
+  console.log(dataArray);
 
   return (
     <>
@@ -132,96 +135,182 @@ function CostCalculator() {
           sx={{ height: 60 }}
         >
           <img src={logo} alt="" />
-          <Typography alignContent="center">
-            Gloabl Employer Cost Calculator
+          <Typography alignContent="center" fontWeight={700}>
+            Global Employer Cost Calculator
           </Typography>
         </Stack>
-        <Box border={2} borderColor="gray">
-          <Typography variant="h6" color="white" sx={{ bgcolor: "#002060" }}>
-            Client Employee Variables
-          </Typography>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            spacing={4}
-            sx={{ border: 1 }}
-          >
+        <form onSubmit={handleSubmit}>
+          <Box border={2} borderColor="gray">
+            <Typography variant="h6" color="white" sx={{ bgcolor: "#002060" }}>
+              Client Employee Variables
+            </Typography>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              spacing={4}
+              sx={{ border: 1 }}
+            >
+              <Typography
+                variant="body1"
+                alignContent="center"
+                sx={{ marginLeft: 2 }}
+              >
+                Client Invoice Currency*{" "}
+              </Typography>
+              <Select
+                id="Client_Invoice_Currency"
+                sx={{ width: 300, height: 40, backgroundColor: "lightgray" }}
+                name="Client_Invoice_Currency"
+                value={values.Client_Invoice_Currency}
+                onChange={handleChange}
+              >
+                <MenuItem value=""></MenuItem>
+                <MenuItem value="AUSTRALIAN DOLLAR">AUSTRALIAN DOLLAR</MenuItem>
+                <MenuItem value="BRITISH POUND">BRITISH POUND</MenuItem>
+                <MenuItem value="CANADIAN DOLLAR">CANADIAN DOLLAR</MenuItem>
+                <MenuItem value="EURO"> EURO</MenuItem>
+                <MenuItem value="US DOLLAR">US DOLLAR</MenuItem>
+              </Select>
+            </Stack>
+
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              spacing={4}
+              sx={{ border: 1 }}
+            >
+              <Typography variant="body1" alignContent="center">
+                Gross Annual Salary in Client Invoice Currency*
+              </Typography>
+              <CustomTextField
+                id="gross_annual_salary_in_client_invoice_currency"
+                sx={{ width: 300, backgroundColor: "skyblue" }}
+                heading={"Website"}
+                type="text"
+                fullWidth
+                value={values.gross_annual_salary_in_client_invoice_currency}
+                onChange={handleChange}
+              />
+            </Stack>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              sx={{ border: 1 }}
+            >
+              <Typography variant="body1" alignContent="center">
+                Country of Employment*{" "}
+              </Typography>
+              <CountryAutoSearch
+                // value={{ country_name: values.Country_of_Employment }}
+                onSelect={(value) => {
+                  setValues({
+                    ...values,
+                    Country_of_Employment: value.country_name,
+                  });
+                }}
+                // error={errors.Country_of_Employment}
+              />
+            </Stack>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              spacing={4}
+              sx={{ border: 1 }}
+            >
+              <Typography variant="body1" alignContent="center">
+                Monthly Management Fee- in Client Invoice Currency
+              </Typography>
+              <CustomTextField
+                id="  Monthly_Management_Fee_in_Client_Invoice_Currency"
+                sx={{ width: 300, backgroundColor: "skyblue" }}
+                heading={"Website"}
+                type="text"
+                fullWidth
+                value={200}
+              />
+            </Stack>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              spacing={4}
+              sx={{ border: 1 }}
+            >
+              <Typography variant="body1" alignContent="center">
+                FX Rate*
+              </Typography>
+              <CustomTextField
+                id="FX_Rate"
+                sx={{ width: 300, backgroundColor: "skyblue" }}
+                heading={"Website"}
+                type="text"
+                fullWidth
+                value={values.FX_Rate}
+                onChange={handleChange}
+              />
+            </Stack>
+          </Box>
+          <Stack alignItems="end" marginTop={2}>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{ backgroundColor: "#002060" }}
+            >
+              Submit
+            </Button>
+          </Stack>
+        </form>
+
+        {submitted && selectedClient && selectedCountry && (
+          <Paper className="mt-8 p-4">
             <Typography
-              variant="body1"
-              alignContent="center"
-              sx={{ marginLeft: 2 }}
+              variant="h6"
+              color="white"
+              sx={{ bgcolor: "#002060", marginTop: 4 }}
             >
-              Client Invoice Currency*{" "}
+              Monthly Employer Costs
             </Typography>
-            <Select
-              sx={{ width: 300, height: 40, backgroundColor: "lightgray" }}
-            >
-              <MenuItem value="AUSTRALIAN DOLLAR">AUSTRALIAN DOLLAR</MenuItem>
-              <MenuItem value="BRITISH POUND">BRITISH POUND</MenuItem>
-              <MenuItem value="CANADIAN DOLLAR">CANADIAN DOLLAR</MenuItem>
-              <MenuItem value="EURO"> EURO</MenuItem>
-              <MenuItem value="US DOLLAR">US DOLLAR</MenuItem>
-            </Select>
-          </Stack>
-
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            spacing={4}
-            sx={{ border: 1 }}
-          >
-            <Typography variant="body1" alignContent="center">
-              Gross annual salary in Client Invoice Currency*
-            </Typography>
-            <CustomTextField
-              sx={{ width: 300, backgroundColor: "skyblue" }}
-              heading={"Website"}
-              type="text"
-              id="website"
-              fullWidth
-            />
-          </Stack>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            sx={{ border: 1 }}
-          >
-            <Typography variant="body1" alignContent="center">
-              Country of Employment*{" "}
-            </Typography>
-            <CountryAutoSearch
-              // sx={{ width: 300, backgroundColor: "skyblue" }}
-              value={selectedCountry}
-              onSelect={(value) => {
-                setSelectedCountry(value);
-              }}
-              // error={errors.Country_of_Employment}
-            />
-          </Stack>
-
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            spacing={4}
-            sx={{ border: 1 }}
-          >
-            <Typography variant="body1" alignContent="center">
-              FX Rate*
-            </Typography>
-            <CustomTextField
-              sx={{ width: 300, backgroundColor: "skyblue" }}
-              heading={"Website"}
-              type="text"
-              id="website"
-              fullWidth
-            />
-          </Stack>
-        </Box>
-        <Stack alignItems="end" marginTop={2}>
-          <Button variant="contained" sx={{ backgroundColor: "#002060" }}>
-            Submit
-          </Button>
-        </Stack>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 900 }} className="text-left">
+                      Category
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 900 }} align="center">
+                      {selectedClient}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 900 }} align="center">
+                      {selectedCountry}
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {dataArray?.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.category}</TableCell>
+                      <TableCell align="center">
+                        {item.currency_one}
+                      </TableCell>{" "}
+                      <TableCell align="center">{item.currency_two}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <Box height={300}></Box>
+                <TableBody sx={{ backgroundColor: "lightgray" }}>
+                  {lastdataArray?.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        {item.category}
+                      </TableCell>
+                      <TableCell align="center">{item.currency_one}</TableCell>
+                      <TableCell align="center">{item.currency_two}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
       </Box>
     </>
   );
